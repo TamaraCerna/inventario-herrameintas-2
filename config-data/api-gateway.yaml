@@ -14,24 +14,22 @@ spring:
 
   cloud:
     gateway:
-      mvc:
-        routes:
-          # ✅ Ruta de prueba externa (para comprobar altiro que enruta)
-          - id: httpbin-test
-            uri: https://httpbin.org
-            predicates:
-              - Path=/httpbin/**
-            filters:
-              - StripPrefix=1
+      server:
+        webmvc:
+          routes:
+            - id: httpbin-test
+              uri: https://httpbin.org
+              predicates:
+                - Path=/httpbin/**
+              filters:
+                - StripPrefix=1
 
-          # ✅ EJEMPLO ruta a microservicio por Eureka (cuando lo tengas)
-          # Cambia "users-service" por el nombre exacto que aparece en Eureka
-          - id: users-service
-            uri: lb://users-service
-            predicates:
-              - Path=/users/**
-            filters:
-              - StripPrefix=1
+            - id: users-service
+              uri: lb://users-service
+              predicates:
+                - Path=/users/**
+              filters:
+                - StripPrefix=1
 
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
