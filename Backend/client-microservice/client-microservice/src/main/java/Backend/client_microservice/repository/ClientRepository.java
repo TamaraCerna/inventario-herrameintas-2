@@ -1,17 +1,15 @@
-package com.example.demo.repository;
+package Backend.client_miroservice.repository;
 
-import com.example.demo.entity.ClientEntity;
-import com.example.demo.entity.LoanEntity;
-import com.example.demo.entity.enums.StateClient;
+import Backend.client_miroservice.entity.ClientEntity;
+import Backend.client_miroservice.entity.StateClient;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
-@Repository
-public interface ClientRepository extends JpaRepository<ClientEntity, Integer> {
+public interface ClientRepository extends JpaRepository<ClientEntity, Long> {
+
+    Optional<ClientEntity> findByClientRut(String clientRut);
+
     List<ClientEntity> findByClientState(StateClient state);
-
-    List<ClientEntity> findAll();
-
 }

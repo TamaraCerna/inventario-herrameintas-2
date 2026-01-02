@@ -1,37 +1,52 @@
-package com.example.demo.service;
+package Backend.client_miroservice.service;
 
-
-import com.example.demo.entity.ClientEntity;
-import com.example.demo.entity.LoanEntity;
-import com.example.demo.entity.enums.StateClient;
-import com.example.demo.repository.ClientRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import Backend.client_miroservice.DTO.ClientCreateRequest;
+import Backend.client_miroservice.entity.ClientEntity;
+import Backend.client_miroservice.entity.StateClient;
+import Backend.client_miroservice.repository.ClientRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@FeignClient(name = "client-service")
 public class ClientService {
-    @Autowired
-    private ClientRepository clientRepository;
 
-    //RF3.1 Registrar información de clientes (nombre, contacto, rut, estado).
-    public ClientEntity registerNewClient(String name, String rut, String phone, String email){
+    private final ClientRepository clientRepository;
+
+    public ClientService(ClientRepository clientRepository) {
+        this.clientRepository = clientRepository;
+    }
+
+    @GetMapping("/clients/{id}")
+
+    ClientDTO getClientById(@PathVariable Long id);
+
+    @Transactional
+    public ClientEntity create(ClientCreateRequest req) {
+        // evitar duplicados por RUT o email (opcional pero recomendado)
+        clientRepository.findByClientRut(req.clientRut()).ifPresent(c -> {
+            throw new IllegalArgumentException("Ya existe un cliente con ese RUT");
+        });
+
         ClientEntity client = new ClientEntity();
-        client.setClientName(name);
-        client.setClientRut(rut);
-        client.setClientPhone(phone);
-        client.setClientEmail(email);
+        client.setClientName(req.clientName());
+        client.setClientRut(req.clientRut());
+        client.setClientPhone(req.clientPhone());
+        client.setClientEmail(req.clientEmail());
         client.setClientState(StateClient.Activo);
         return clientRepository.save(client);
     }
 
-    //RF3.2 Cambiar estado de cliente a “restringido” en caso de atrasos.
-    public ClientEntity rectifClientStatus(ClientEntity client){
-        for(LoanEntity loan : client.getClientLoanActive()) {
-            if (loan.getLoanPenalty() != 0) {
-                client.setClientState(StateClient.Restringido);
-                return clientRepository.save(client);
-            }
-        }
-        return client;
+    @Transactional(readOnly = true)
+    public ClientEntity getById(Long id) {
+        return clientRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Cliente no encontrado"));
+    }
+
+    @Transactional
+    public ClientEntity updateState(Long id, StateClient state) {
+        ClientEntity client = getById(id);
+        client.setClientState(state);
+        return clientRepository.save(client);
     }
 }

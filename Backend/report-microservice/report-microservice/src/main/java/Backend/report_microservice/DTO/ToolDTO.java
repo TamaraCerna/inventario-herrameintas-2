@@ -1,0 +1,1 @@
+public record ToolDTO(Long toolId, String toolName) {}
