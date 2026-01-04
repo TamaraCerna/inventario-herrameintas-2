@@ -1,4 +1,4 @@
-package Backend.client_miroservice.DTO;
+package Backend.client_microservice.DTO;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

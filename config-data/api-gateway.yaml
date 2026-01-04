@@ -1,35 +1,54 @@
 server:
   port: 8080
 
-eureka:
-  client:
-    register-with-eureka: true
-    fetch-registry: true
-    service-url:
-      defaultZone: http://localhost:8761/eureka/
-
 spring:
   application:
     name: api-gateway
 
   cloud:
+    config:
+      enabled: true
+      uri: http://localhost:8888
+
     gateway:
       server:
         webmvc:
           routes:
-            - id: httpbin-test
-              uri: https://httpbin.org
-              predicates:
-                - Path=/httpbin/**
-              filters:
-                - StripPrefix=1
-
-            - id: users-service
-              uri: lb://users-service
+            - id: user-microservice-users
+              uri: lb://user-microservice
               predicates:
                 - Path=/users/**
-              filters:
-                - StripPrefix=1
+
+            - id: client-microservice
+              uri: lb://client-microservice
+              predicates:
+                - Path=/client/**
+
+            - id: kardex-microservice
+              uri: lb://kardex-microservice
+              predicates:
+                - Path=/kardex/**
+
+            - id: loan-microservice
+              uri: lb://loan-microservice
+              predicates:
+                - Path=/loans/**
+
+            - id: report-microservice
+              uri: lb://report-microservice
+              predicates:
+                - Path=/report/**
+
+            - id: tool-microservice
+              uri: lb://tool-microservice
+              predicates:
+                - Path=/tools/**
+
+            - id: user-microservice-user
+              uri: lb://user-microservice
+              predicates:
+                - Path=/user/**
+
 
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
@@ -37,7 +56,22 @@ spring:
       globalcors:
         cors-configurations:
           "[/**]":
-            allowedOriginPatterns: "*"
+            allowedOrigins:
+              - "http://localhost:5173"
             allowedMethods: "*"
             allowedHeaders: "*"
             allowCredentials: true
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+

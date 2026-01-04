@@ -1,6 +1,6 @@
 package Backend.loan_microservice.entity;
 
-import Backend.loan_microservice.entity.enums.StateLoan;
+import Backend.loan_microservice.entity.StateLoan;
 import jakarta.persistence.*;
 import lombok.*;
 

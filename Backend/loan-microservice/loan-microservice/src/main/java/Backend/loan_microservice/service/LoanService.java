@@ -1,11 +1,10 @@
-package com.example.demo.service;
+package Backend.loan_microservice.service;
 
-import com.example.demo.entity.*;
-import com.example.demo.entity.enums.Move;
-import com.example.demo.entity.enums.State;
-import com.example.demo.entity.enums.StateClient;
-import com.example.demo.entity.enums.StateLoan;
-import com.example.demo.repository.*;
+import Backend.loan_microservice.entity.*;
+import Backend.loan_microservice.entity.Move;
+import Backend.loan_microservice..enums.State;
+import Backend.loan_microservice.DTO.*;
+import Backend.loan_microservice.repository.*;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;

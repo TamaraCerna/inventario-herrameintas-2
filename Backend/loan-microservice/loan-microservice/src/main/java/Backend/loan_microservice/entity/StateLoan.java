@@ -1,4 +1,4 @@
-package com.example.demo.entity.enums;
+package Backend.loan_microservice.entity;
 
 public enum StateLoan {
     Activo,

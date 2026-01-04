@@ -1,14 +1,12 @@
-package Backend.client_miroservice.entity;
+package Backend.client_microservice.entity;
 
-import Backend.client_miroservice.StateClient;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import Backend.client_microservice.entity.StateClient;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
-import java.util.List;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "clients")
@@ -41,7 +39,5 @@ public class ClientEntity {
     @Column(name = "client_state", nullable = false, length = 20)
     private StateClient clientState;
 
-    @OneToMany(mappedBy = "loanClient", fetch = FetchType.LAZY)
-    @JsonIgnore
-    private List<LoanEntity> clientLoanActive;
 }
+

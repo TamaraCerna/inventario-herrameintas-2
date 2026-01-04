@@ -1,8 +1,8 @@
-package com.example.demo.controller;
+package Backend.loan_microservice.controller;
 
 
-import com.example.demo.entity.*;
-import com.example.demo.service.LoanService;
+import Backend.loan_microservice.entity.*;
+import Backend.loan_microservice.service.LoanService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

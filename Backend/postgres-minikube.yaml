@@ -1,0 +1,129 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-credentials
+type: Opaque
+data:
+  POSTGRES_USER: cG9zdGdyZXM=
+  POSTGRES_PASSWORD: MTIzNA==
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init
+data:
+  01-init.sql: |
+    -- Crear DB dbtools si no existe
+    SELECT 'CREATE DATABASE dbtools'
+        WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'dbtools')\gexec;
+
+    -- Tabla users (se crea en appdb porque POSTGRES_DB=appdb)
+    CREATE TABLE IF NOT EXISTS users (
+                                         user_id SERIAL PRIMARY KEY,
+                                         user_name VARCHAR(100) NOT NULL,
+        user_email VARCHAR(150) NOT NULL UNIQUE,
+        user_password VARCHAR(255) NOT NULL,
+        user_type VARCHAR(20) NOT NULL
+        );
+
+    -- Cambiar a dbtools y crear tools
+    \c dbtools;
+
+    CREATE TABLE IF NOT EXISTS tools (
+                                         id_tool SERIAL PRIMARY KEY,
+                                         name_tool VARCHAR(100) NOT NULL,
+        category_tool VARCHAR(50) NOT NULL,
+        initial_state_tool VARCHAR(50) NOT NULL,
+        replacement_value_tool INT NOT NULL CHECK (replacement_value_tool > 0)
+        );
+    \c dbtariff;
+  
+    CREATE TABLE tariff (
+    tariff_id SERIAL PRIMARY KEY,
+    tool_id INT NOT NULL,
+    price_per_day INT NOT NULL CHECK (price_per_day > 0),
+    start_date DATE NOT NULL,
+    end_date DATE,
+    tariff_state VARCHAR(20) NOT NULL DEFAULT 'ACTIVA',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+    -- Conectarse a dbclient
+    \c dbclient;
+    
+    -- Tabla clients
+    CREATE TABLE IF NOT EXISTS clients (
+    client_id SERIAL PRIMARY KEY,
+    client_name VARCHAR(100) NOT NULL,
+    client_rut VARCHAR(20) NOT NULL UNIQUE,
+    client_phone VARCHAR(20),
+    client_email VARCHAR(150) NOT NULL UNIQUE,
+    client_state VARCHAR(20) NOT NULL
+    );
+
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+spec:
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_DB
+              value: appdb
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: db-data
+            - mountPath: /docker-entrypoint-initdb.d
+              name: init-sql
+      volumes:
+        - name: db-data
+          persistentVolumeClaim:
+            claimName: postgres-pvc
+        - name: init-sql
+          configMap:
+            name: postgres-init
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432

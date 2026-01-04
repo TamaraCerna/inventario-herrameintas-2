@@ -1,47 +1,45 @@
-package com.example.demo.service;
+package Backend.report_microservice.service;
 
-import com.example.demo.entity.ClientEntity;
-import com.example.demo.entity.LoanEntity;
-import com.example.demo.entity.ReportDTO;
-import com.example.demo.entity.StockToolsEntity;
-import com.example.demo.entity.enums.StateClient;
-import com.example.demo.entity.enums.StateLoan;
-import com.example.demo.repository.ClientRepository;
-import com.example.demo.repository.LoanRepository;
-import com.example.demo.repository.StockToolsRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import Backend.report_microservice.entity.ReportEntity;
+import Backend.report_microservice.DTO.*;
+import Backend.report_microservice.repository.ReportRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
+import java.time.Instant;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class ReportService {
 
-    @Autowired
-    private RestTemplate restTemplate; // @LoadBalanced
+    private final RestTemplate restTemplate;     // ideal: @LoadBalanced con Eureka
+    private final ReportRepository reportRepository;
+    private final ObjectMapper objectMapper;
 
-    // RF6.1 préstamos activos y estado (vigente/atrasado)
-    public List<LoanReportItemDTO> listStateLoan(String state) {
+    // RF6.1: genera snapshot y lo guarda en ReportEntity.filtersJson
+    public ReportEntity createStateLoanReport(String state, String createdBy) {
 
-        // 1) pedir préstamos al loan-service
         LoanDTO[] loans = restTemplate.getForObject(
                 "http://loan-service/loans?state=" + state,
                 LoanDTO[].class
         );
 
-        if (loans == null) return List.of();
-
         LocalDate today = LocalDate.now();
 
-        return java.util.Arrays.stream(loans).map(loan -> {
-            // 2) pedir nombre cliente a client-service
+        List<LoanReportItemDTO> items = (loans == null) ? List.of()
+                : Arrays.stream(loans).map(loan -> {
+
             ClientDTO client = restTemplate.getForObject(
                     "http://client-service/clients/" + loan.clientId(),
                     ClientDTO.class
             );
 
-            // 3) pedir nombre herramienta a tool-service
             ToolDTO tool = restTemplate.getForObject(
                     "http://tool-service/tools/" + loan.toolId(),
                     ToolDTO.class
@@ -59,18 +57,52 @@ public class ReportService {
                     detalle
             );
         }).toList();
+
+        ReportSnapshotDTO snapshot = new ReportSnapshotDTO(
+                "RF6_1_STATE_LOAN",
+                "state=" + state,
+                Instant.now(),
+                items
+        );
+
+        String json;
+        try {
+            json = objectMapper.writeValueAsString(snapshot);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("No se pudo serializar el snapshot del reporte", e);
+        }
+
+        ReportEntity report = ReportEntity.builder()
+                .createdAt(Instant.now())
+                .createdBy(createdBy)
+                .filtersJson(json)
+                .build();
+
+        return reportRepository.save(report);
     }
 
-    // RF6.2 listar clientes con atrasos (restringidos)
+    // Leer el reporte persistido y devolver el snapshot parseado
+    public ReportSnapshotDTO getReportSnapshot(Long reportId) {
+        ReportEntity report = reportRepository.findById(reportId)
+                .orElseThrow(() -> new RuntimeException("Reporte no encontrado: " + reportId));
+
+        try {
+            return objectMapper.readValue(report.getFiltersJson(), ReportSnapshotDTO.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("filtersJson no corresponde a ReportSnapshotDTO", e);
+        }
+    }
+
+    // RF6.2: en vivo
     public List<ClientDTO> listOverdueCustomers() {
         ClientDTO[] clients = restTemplate.getForObject(
                 "http://client-service/clients?state=Restringido",
                 ClientDTO[].class
         );
-        return clients == null ? List.of() : java.util.Arrays.asList(clients);
+        return clients == null ? List.of() : Arrays.asList(clients);
     }
 
-    // RF6.3 ranking herramientas (lo ideal es que tool-service entregue este ranking)
+    // RF6.3: en vivo (si tu endpoint devuelve Object[])
     public Object[] rankingTools() {
         return restTemplate.getForObject(
                 "http://tool-service/tools/ranking",
@@ -78,3 +110,5 @@ public class ReportService {
         );
     }
 }
+
+

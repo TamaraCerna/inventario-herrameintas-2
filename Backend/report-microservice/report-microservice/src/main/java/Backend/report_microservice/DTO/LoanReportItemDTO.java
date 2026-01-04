@@ -1,3 +1,7 @@
+package Backend.report_microservice.DTO;
+
+import java.time.LocalDate;
+
 public record LoanReportItemDTO(
         Long loanId,
         String clientName,
@@ -5,5 +9,5 @@ public record LoanReportItemDTO(
         String loanState,
         LocalDate loanDateInit,
         LocalDate loanDateFinish,
-        String estadoDetalle
+        String detalle
 ) {}

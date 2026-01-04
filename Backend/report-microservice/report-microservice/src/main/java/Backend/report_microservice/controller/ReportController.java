@@ -1,11 +1,9 @@
-package com.example.demo.controller;
+package Backend.report_microservice.controller;
 
-import com.example.demo.entity.ClientEntity;
-import com.example.demo.entity.LoanEntity;
-import com.example.demo.entity.ReportDTO;
-import com.example.demo.entity.StockToolsEntity;
-import com.example.demo.entity.enums.StateLoan;
-import com.example.demo.service.ReportService;
+import Backend.report_microservice.entity.ReportEntity;
+import Backend.report_microservice.DTO.ClientDTO;
+import Backend.report_microservice.DTO.ReportSnapshotDTO;
+import Backend.report_microservice.service.ReportService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,27 +20,32 @@ public class ReportController {
         this.reportService = reportService;
     }
 
-    // RF6.1
-    @GetMapping("/loans")
-    public ResponseEntity<List<ReportDTO>> getActiveLoans(
-            @RequestParam(defaultValue = "Activo") StateLoan state) {
-        List<ReportDTO> loans = reportService.listStateLoan(state);
-        return ResponseEntity.ok(loans);
+    // RF6.1 (PERSISTE)
+    // POST /reports/loans?state=Activo&createdBy=admin
+    @PostMapping("/loans")
+    public ResponseEntity<ReportEntity> createLoansReport(
+            @RequestParam(defaultValue = "Activo") String state,
+            @RequestParam(defaultValue = "system") String createdBy
+    ) {
+        return ResponseEntity.ok(reportService.createStateLoanReport(state, createdBy));
     }
 
+    // GET /reports/{id} -> devuelve el snapshot guardado
+    @GetMapping("/{id}")
+    public ResponseEntity<ReportSnapshotDTO> getReport(@PathVariable Long id) {
+        return ResponseEntity.ok(reportService.getReportSnapshot(id));
+    }
 
     // RF6.2
     @GetMapping("/overdue-customers")
-    public ResponseEntity<List<ClientEntity>> getOverdueCustomers() {
-        List<ClientEntity> clients = reportService.listOverdueCustomers();
-        return ResponseEntity.ok(clients);
+    public ResponseEntity<List<ClientDTO>> getOverdueCustomers() {
+        return ResponseEntity.ok(reportService.listOverdueCustomers());
     }
 
     // RF6.3
     @GetMapping("/ranking-tools")
-    public ResponseEntity<List<Object[]>> getRankingTools() {
-        List<Object[]> ranking = reportService.rankingTools();
-        return ResponseEntity.ok(ranking);
+    public ResponseEntity<Object[]> getRankingTools() {
+        return ResponseEntity.ok(reportService.rankingTools());
     }
-
 }
+

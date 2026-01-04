@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tool-microservice
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tool-microservice
+  template:
+    metadata:
+      labels:
+        app: tool-microservice
+    spec:
+      containers:
+        - name: tool-microservice
+          image: tool-microservice:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: k8s
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tool-microservice
+spec:
+  selector:
+    app: tool-microservice
+  ports:
+    - port: 8080
+      targetPort: 8080
+  type: ClusterIP

@@ -1,6 +1,8 @@
-package Backend.client_miroservice.DTO;
+package Backend.client_microservice.DTO;
 
-import com.example.clientservice.entity.enums.StateClient;
+import Backend.client_microservice.entity.StateClient;
 import jakarta.validation.constraints.NotNull;
 
-public record UpdateClientStateRequest(@NotNull StateClient state) {}
+public record UpdateClientStateRequest(
+        @NotNull StateClient state
+) {}

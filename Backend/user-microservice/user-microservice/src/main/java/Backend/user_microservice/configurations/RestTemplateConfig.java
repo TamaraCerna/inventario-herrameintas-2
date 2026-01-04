@@ -1,4 +1,4 @@
-package Backend.loan_sicroservice.configurations;
+package Backend.user_microservice.configurations;
 
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;

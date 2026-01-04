@@ -1,8 +1,10 @@
-package Backend.client_miroservice.controller;
+package Backend.client_microservice.controller;
 
-import Backend.client_miroservice.DTO.*;
-import Backend.client_miroservice.entity.ClientEntity;
-import Backend.client_miroservice.service.ClientService;
+import Backend.client_microservice.DTO.ClientCreateRequest;
+import Backend.client_microservice.DTO.ClientResponse;
+import Backend.client_microservice.DTO.UpdateClientStateRequest;
+import Backend.client_microservice.entity.ClientEntity;
+import Backend.client_microservice.service.ClientService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -46,4 +48,5 @@ public class ClientController {
         );
     }
 }
+
 
