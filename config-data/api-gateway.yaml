@@ -5,14 +5,11 @@ spring:
   application:
     name: api-gateway
 
-  # ✅ Keycloak (JWT validation en el Gateway)
-
-    security:
-      oauth2:
-        resourceserver:
-          jwt:
-            issuer-uri: http://localhost:8081/realms/toolrent
-
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8081/realms/toolrent
 
   cloud:
     gateway:
