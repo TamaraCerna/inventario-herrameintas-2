@@ -5,7 +5,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.GrantedAuthority;
@@ -22,13 +21,9 @@ import java.util.Map;
 @EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
-    /**
-     * ✅ CHAIN #1 (prioridad alta): Actuator SIN JWT
-     * Esto evita que /actuator/** quede protegido por el resource server.
-     *
-     * Si quieres exponer SOLO health/info (y no todo actuator),
-     * dime y lo ajusto.
-     */
+    // =========================
+    // CHAIN #1 – ACTUATOR
+    // =========================
     @Bean
     @Order(1)
     public SecurityFilterChain actuatorChain(HttpSecurity http) throws Exception {
@@ -39,15 +34,20 @@ public class SecurityConfig {
                 .build();
     }
 
-    /**
-     * ✅ CHAIN #2: Resto de la app con JWT (Keycloak)
-     */
+    // =========================
+    // CHAIN #2 – APP JWT
+    // =========================
     @Bean
     @Order(2)
     public SecurityFilterChain appChain(HttpSecurity http) throws Exception {
 
-        JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
-        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(keycloakRolesConverter("sisgr-back"));
+        JwtAuthenticationConverter jwtAuthenticationConverter =
+                new JwtAuthenticationConverter();
+
+        // 👉 AQUÍ usamos realm roles
+        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(
+                realmRolesConverter()
+        );
 
         return http
                 .csrf(csrf -> csrf.disable())
@@ -60,7 +60,7 @@ public class SecurityConfig {
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
 
-                        // Todo lo demás con JWT
+                        // Resto protegido
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
@@ -69,11 +69,33 @@ public class SecurityConfig {
                 .build();
     }
 
-    /**
-     * Lee roles desde Keycloak:
-     * resource_access.{clientId}.roles
-     * y los transforma a ROLE_X para que funcione hasRole('X')
-     */
+    // =========================
+    // REALM ROLES CONVERTER
+    // =========================
+    private Converter<Jwt, Collection<GrantedAuthority>> realmRolesConverter() {
+        return jwt -> {
+            Collection<GrantedAuthority> authorities = new ArrayList<>();
+
+            Object realmAccessObj = jwt.getClaim("realm_access");
+            if (realmAccessObj instanceof Map<?, ?> realmAccess) {
+                Object rolesObj = realmAccess.get("roles");
+                if (rolesObj instanceof Collection<?> roles) {
+                    for (Object role : roles) {
+                        if (role != null) {
+                            authorities.add(
+                                    new SimpleGrantedAuthority("ROLE_" + role)
+                            );
+                        }
+                    }
+                }
+            }
+            return authorities;
+        };
+    }
+
+    // =========================
+    // (OPCIONAL) CLIENT ROLES
+    // =========================
     private Converter<Jwt, Collection<GrantedAuthority>> keycloakRolesConverter(String clientId) {
         return jwt -> {
             Collection<GrantedAuthority> authorities = new ArrayList<>();
@@ -94,14 +116,14 @@ public class SecurityConfig {
             }
 
             for (Object role : roles) {
-                if (role != null) {
-                    authorities.add(new SimpleGrantedAuthority("ROLE_" + role.toString()));
-                }
+                authorities.add(
+                        new SimpleGrantedAuthority("ROLE_" + role)
+                );
             }
-
             return authorities;
         };
     }
 }
+
 
 

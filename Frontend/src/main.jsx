@@ -1,4 +1,3 @@
-import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { createHashRouter, RouterProvider } from "react-router-dom";
 
@@ -10,17 +9,19 @@ import ErrorPage from "./Components/ErrorPage.jsx";
 
 import UserDashboard from "./User/Views/UserDashboard.jsx";
 import AdminDashboard from "./User/Views/AdminDashboard.jsx";
-import ToolView from "./Tool/Views/ToolView.jsx"; // tu vista de herramientas/lista si la tienes
+import ToolView from "./Tool/Views/ToolView.jsx";
+
 import ProtectedRoute from "./Components/ProtectedRoute.jsx";
 
 import "./index.css";
 
+/* -------------------- ROUTER -------------------- */
 const router = createHashRouter([
     {
         path: "/",
         element: (
             <ComponentsWithNavBar>
-                <ProtectedRoute>
+                <ProtectedRoute roles={["USER", "ADMIN"]}>
                     <UserDashboard />
                 </ProtectedRoute>
             </ComponentsWithNavBar>
@@ -56,41 +57,46 @@ const router = createHashRouter([
         path: "/tools",
         element: (
             <ComponentsWithNavBar>
-                <ProtectedRoute roles={["USER", "ADMIN"]}>
+                <ProtectedRoute roles={["ADMIN"]}>
                     <ToolView />
                 </ProtectedRoute>
             </ComponentsWithNavBar>
         ),
         errorElement: <ErrorPage />,
     },
+
+    // fallback
+    {
+        path: "*",
+        element: <ErrorPage />,
+    },
 ]);
 
+/* -------------------- KEYCLOAK HANDLERS -------------------- */
 const onKeycloakEvent = (event, error) => {
-    if (error) console.error("Keycloak error:", error);
-    // events: onReady, onAuthSuccess, onAuthError, onAuthRefreshSuccess, onAuthRefreshError, onTokenExpired, onAuthLogout
+    if (error) console.error("Keycloak event error:", event, error);
 };
 
 const onKeycloakTokens = (tokens) => {
-    // tokens.token (access token), tokens.refreshToken, tokens.idToken
-    // útil para debug:
-    // console.log("tokens updated", tokens);
+    // console.log("Keycloak tokens updated", tokens);
 };
 
+/* -------------------- RENDER -------------------- */
 createRoot(document.getElementById("root")).render(
-    <StrictMode>
-        <ReactKeycloakProvider
-            authClient={keycloak}
-            onEvent={onKeycloakEvent}
-            onTokens={onKeycloakTokens}
-            initOptions={{
-                onLoad: "login-required", // fuerza login al entrar
-                checkLoginIframe: false,  // evita problemas con iframe en local
-                pkceMethod: "S256",
-            }}
-        >
-            <RouterProvider router={router} />
-        </ReactKeycloakProvider>
-    </StrictMode>
+    <ReactKeycloakProvider
+        authClient={keycloak}
+        onEvent={onKeycloakEvent}
+        onTokens={onKeycloakTokens}
+        initOptions={{
+            onLoad: "check-sso",
+            checkLoginIframe: false,
+            pkceMethod: "S256",
+            redirectUri: window.location.origin + "/#/",
+        }}
+    >
+        <RouterProvider router={router} />
+    </ReactKeycloakProvider>
 );
+
 
 

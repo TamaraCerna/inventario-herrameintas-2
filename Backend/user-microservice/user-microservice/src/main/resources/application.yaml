@@ -1,34 +1,10 @@
-eureka:
-  client:
-    fetch-registry: true
-    register-with-eureka: true
-    service-url:
-      defaultZone: http://localhost:8761/eureka/
-
 spring:
   application:
     name: user-microservice
+  config:
+    import: "optional:configserver:http://localhost:8888"
 
-  datasource:
-    driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:15432/appdb
-    username: postgres
-    password: 1234
-
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          # 👇 Opción B1: Issuer (Keycloak ejemplo)
-          issuer-uri: http://localhost:8080/realms/toolrent
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: "*"
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
