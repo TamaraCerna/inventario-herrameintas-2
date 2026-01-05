@@ -5,50 +5,49 @@ spring:
   application:
     name: api-gateway
 
-  cloud:
-    config:
-      enabled: true
-      uri: http://localhost:8888
+  # ✅ Keycloak (JWT validation en el Gateway)
 
+    security:
+      oauth2:
+        resourceserver:
+          jwt:
+            issuer-uri: http://localhost:8081/realms/toolrent
+
+
+  cloud:
     gateway:
       server:
         webmvc:
           routes:
-            - id: user-microservice-users
-              uri: lb://user-microservice
+            - id: tool-microservice
+              uri: lb://TOOL-MICROSERVICE
               predicates:
-                - Path=/users/**
+                - Path=/tools,/tools/**
+
+            - id: user-microservice
+              uri: lb://USER-MICROSERVICE
+              predicates:
+                - Path=/users,/users/**
 
             - id: client-microservice
-              uri: lb://client-microservice
+              uri: lb://CLIENT-MICROSERVICE
               predicates:
-                - Path=/client/**
+                - Path=/client,/client/**
 
             - id: kardex-microservice
-              uri: lb://kardex-microservice
+              uri: lb://KARDEX-MICROSERVICE
               predicates:
-                - Path=/kardex/**
+                - Path=/kardex,/kardex/**
 
             - id: loan-microservice
-              uri: lb://loan-microservice
+              uri: lb://LOAN-MICROSERVICE
               predicates:
-                - Path=/loans/**
+                - Path=/loans,/loans/**
 
             - id: report-microservice
-              uri: lb://report-microservice
+              uri: lb://REPORT-MICROSERVICE
               predicates:
-                - Path=/report/**
-
-            - id: tool-microservice
-              uri: lb://tool-microservice
-              predicates:
-                - Path=/tools/**
-
-            - id: user-microservice-user
-              uri: lb://user-microservice
-              predicates:
-                - Path=/user/**
-
+                - Path=/report,/report/**
 
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
@@ -73,5 +72,13 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,gateway
+        include: "*"
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.cloud.gateway.server.mvc: DEBUG
+    org.springframework.cloud.loadbalancer: DEBUG
+    org.springframework.security: DEBUG   # ✅ útil para ver por qué da 401/403
+
 

@@ -55,6 +55,7 @@ public class UserController {
     }
 
     // RF7.4 - Login (si lo sigues usando)
+    /*
     @PostMapping("/login")
     public ResponseEntity<?> login(
             @RequestParam String name,
@@ -69,7 +70,7 @@ public class UserController {
                         )))
                 .orElse(ResponseEntity.badRequest().body("Usuario o contraseña incorrectos."));
 
-    }
+    }*/
 
     record LoginResponse(long id, String name, String email) {}
 }

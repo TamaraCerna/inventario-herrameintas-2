@@ -13,8 +13,7 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/tools/**").permitAll()
-                        .anyRequest().authenticated()
+                        .requestMatchers("/**").permitAll()   // 👈 TODO abierto
                 )
                 .httpBasic(basic -> basic.disable())
                 .formLogin(form -> form.disable());
@@ -22,3 +21,4 @@ public class SecurityConfig {
         return http.build();
     }
 }
+
