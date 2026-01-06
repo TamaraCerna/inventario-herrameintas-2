@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { postUser } from '../Services/UserServices';
+import { useState } from "react";
+import { postUser } from "../Services/UserServices";
 
-function RegisterUserForm() {
+export default function RegisterUserForm() {
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
     const [rut, setRut] = useState("");
@@ -10,43 +10,112 @@ function RegisterUserForm() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
         try {
-            const userData = { firstName, lastName, rut, address, age };
+            const userData = {
+                firstName: firstName.trim(),
+                lastName: lastName.trim(),
+                rut: rut.trim(),
+                address: address.trim(),
+                age: Number(age),
+            };
+
             await postUser(userData);
+
             alert("Usuario registrado correctamente");
-        } catch {
+
+            // limpiar
+            setFirstName("");
+            setLastName("");
+            setRut("");
+            setAddress("");
+            setAge(0);
+        } catch (err) {
+            console.error(err);
             alert("Error al registrar usuario");
         }
     };
 
     return (
-        <div className='flex flex-col items-center justify-center '>
-            <h1 className='text-4xl mb-4'>Registro de usuario</h1>
+        <div className="flex flex-col items-center justify-center">
+            <h1 className="text-4xl mb-4">Registro de usuario</h1>
 
-            <section className='border-2 p-4 w-1/4 rounded-lg bg-white'>
-                <form onSubmit={handleSubmit} className='grid gap-4'>
-                    <label className='grid' htmlFor="firstName">Nombre:
-                        <input type="text" id="firstName" name="firstName" onChange={(e) => setFirstName(e.target.value)} className='border p-2 focus:ring-indigo-500 focus:border-indigo-500' />
+            <section className="border-2 p-4 w-1/4 rounded-lg bg-white">
+                <form onSubmit={handleSubmit} className="grid gap-4">
+                    <label className="grid" htmlFor="firstName">
+                        Nombre:
+                        <input
+                            type="text"
+                            id="firstName"
+                            name="firstName"
+                            value={firstName}
+                            onChange={(e) => setFirstName(e.target.value)}
+                            className="border p-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            required
+                        />
                     </label>
-                    <label className='grid' htmlFor="lastName">Apellido:
-                        <input type="text" id="lastName" name="lastName" onChange={(e) => setLastName(e.target.value)} className='border p-2 focus:ring-indigo-500 focus:border-indigo-500' />
+
+                    <label className="grid" htmlFor="lastName">
+                        Apellido:
+                        <input
+                            type="text"
+                            id="lastName"
+                            name="lastName"
+                            value={lastName}
+                            onChange={(e) => setLastName(e.target.value)}
+                            className="border p-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            required
+                        />
                     </label>
-                    <label className='grid' htmlFor="rut">Rut:
-                        <input type="text" id="rut" name="rut" onChange={(e) => setRut(e.target.value)} className='border p-2 focus:ring-indigo-500 focus:border-indigo-500' />
+
+                    <label className="grid" htmlFor="rut">
+                        Rut:
+                        <input
+                            type="text"
+                            id="rut"
+                            name="rut"
+                            value={rut}
+                            onChange={(e) => setRut(e.target.value)}
+                            className="border p-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            required
+                        />
                     </label>
-                    <label className='grid' htmlFor="address">Dirección:
-                        <input type="text" id="address" name="address" onChange={(e) => setAddress(e.target.value)} className='border p-2 focus:ring-indigo-500 focus:border-indigo-500' />
+
+                    <label className="grid" htmlFor="address">
+                        Dirección:
+                        <input
+                            type="text"
+                            id="address"
+                            name="address"
+                            value={address}
+                            onChange={(e) => setAddress(e.target.value)}
+                            className="border p-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            required
+                        />
                     </label>
-                    <label className='grid' htmlFor="age">Edad:
-                        <input type="number" id="age" name="age" onChange={(e) => setAge(e.target.value)} className='border p-2 focus:ring-indigo-500 focus:border-indigo-500' />
+
+                    <label className="grid" htmlFor="age">
+                        Edad:
+                        <input
+                            type="number"
+                            id="age"
+                            name="age"
+                            value={age}
+                            min={0}
+                            onChange={(e) => setAge(Number(e.target.value))}
+                            className="border p-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            required
+                        />
                     </label>
-                    <button type="submit" className='w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700'>
+
+                    <button
+                        type="submit"
+                        className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700"
+                    >
                         Submit
                     </button>
                 </form>
             </section>
         </div>
-    )
+    );
 }
-
-export default RegisterUserForm;

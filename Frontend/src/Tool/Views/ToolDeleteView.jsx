@@ -1,21 +1,34 @@
 import { useState } from "react";
+import { useKeycloak } from "@react-keycloak/web";
 import { deleteTool } from "../Services/ToolService.js";
 
 export default function ToolDeleteView() {
+    const { keycloak } = useKeycloak();
+
     const [id, setId] = useState("");
     const [msg, setMsg] = useState("");
     const [error, setError] = useState("");
 
     const handleDelete = async (e) => {
         e.preventDefault();
+
+        const numericId = Number(id);
+        if (!Number.isInteger(numericId) || numericId <= 0) {
+            setError("ID inválido");
+            return;
+        }
+
         try {
             setError("");
             setMsg("");
-            await deleteTool(Number(id));
+
+            // ✅ ahora se pasa keycloak
+            await deleteTool(keycloak, numericId);
+
             setMsg("🗑️ Herramienta eliminada");
             setId("");
         } catch (err) {
-            setError(err.message || "Error eliminando herramienta");
+            setError(err?.message || "Error eliminando herramienta");
         }
     };
 

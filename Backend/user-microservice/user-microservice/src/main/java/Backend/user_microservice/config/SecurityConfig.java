@@ -5,6 +5,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.GrantedAuthority;
@@ -22,7 +24,7 @@ import java.util.Map;
 public class SecurityConfig {
 
     // =========================
-    // CHAIN #1 – ACTUATOR
+    // CHAIN #1 – ACTUATOR (libre)
     // =========================
     @Bean
     @Order(1)
@@ -43,34 +45,47 @@ public class SecurityConfig {
 
         JwtAuthenticationConverter jwtAuthenticationConverter =
                 new JwtAuthenticationConverter();
-
-        // 👉 AQUÍ usamos realm roles
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(
                 realmRolesConverter()
         );
 
         return http
+                // 🔥 CLAVE: delimita esta chain
+                .securityMatcher("/**")
+
+                // 🔥 CLAVE: CORS para Gateway / Browser
+                .cors(Customizer.withDefaults())
+
                 .csrf(csrf -> csrf.disable())
+
                 .authorizeHttpRequests(auth -> auth
+                        // Preflight
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
                         // Públicos
-                        .requestMatchers("/users/login", "/users/register").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/users/register").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/users/login").permitAll()
                         .requestMatchers("/public/**").permitAll()
 
-                        // Por rol
+                        // Roles
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
 
                         // Resto protegido
                         .anyRequest().authenticated()
                 )
-                .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter))
+
+                .oauth2ResourceServer(oauth2 ->
+                        oauth2.jwt(jwt ->
+                                jwt.jwtAuthenticationConverter(jwtAuthenticationConverter)
+                        )
                 )
+
                 .build();
     }
 
     // =========================
-    // REALM ROLES CONVERTER
+    // REALM ROLES (Keycloak)
     // =========================
     private Converter<Jwt, Collection<GrantedAuthority>> realmRolesConverter() {
         return jwt -> {
@@ -81,49 +96,17 @@ public class SecurityConfig {
                 Object rolesObj = realmAccess.get("roles");
                 if (rolesObj instanceof Collection<?> roles) {
                     for (Object role : roles) {
-                        if (role != null) {
-                            authorities.add(
-                                    new SimpleGrantedAuthority("ROLE_" + role)
-                            );
-                        }
+                        authorities.add(
+                                new SimpleGrantedAuthority("ROLE_" + role)
+                        );
                     }
                 }
             }
             return authorities;
         };
     }
-
-    // =========================
-    // (OPCIONAL) CLIENT ROLES
-    // =========================
-    private Converter<Jwt, Collection<GrantedAuthority>> keycloakRolesConverter(String clientId) {
-        return jwt -> {
-            Collection<GrantedAuthority> authorities = new ArrayList<>();
-
-            Object resourceAccessObj = jwt.getClaim("resource_access");
-            if (!(resourceAccessObj instanceof Map<?, ?> resourceAccess)) {
-                return authorities;
-            }
-
-            Object clientObj = resourceAccess.get(clientId);
-            if (!(clientObj instanceof Map<?, ?> clientMap)) {
-                return authorities;
-            }
-
-            Object rolesObj = clientMap.get("roles");
-            if (!(rolesObj instanceof Collection<?> roles)) {
-                return authorities;
-            }
-
-            for (Object role : roles) {
-                authorities.add(
-                        new SimpleGrantedAuthority("ROLE_" + role)
-                );
-            }
-            return authorities;
-        };
-    }
 }
+
 
 
 

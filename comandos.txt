@@ -1,1 +1,17 @@
+minikube start
+
 kubectl port-forward svc/postgres 15432:5432
+
+docker start keycloak
+
+cd /home/tamara/Escritorio/inventario-herrameintas-2/Backend/api-gateway/api-gateway
+mvn spring-boot:run
+
+cd /home/tamara/Escritorio/inventario-herrameintas-2/Backend/config-server/config-server
+mvn spring-boot:run
+
+cd /home/tamara/Escritorio/inventario-herrameintas-2/Backend/eureka-server/eureka-server
+mvn spring-boot:run
+
+cd /home/tamara/Escritorio/inventario-herrameintas-2/Frontend
+npm run dev

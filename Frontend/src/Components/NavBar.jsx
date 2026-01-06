@@ -17,20 +17,20 @@ export default function NavBar() {
         <nav className="bg-indigo-600 py-4 shadow-md mb-6">
             <div className="container mx-auto flex justify-center space-x-8 items-center">
 
-                <Link to="/" className={linkClass}>
+                <Link to={keycloak?.authenticated ? "/dashboard" : "/"} className={linkClass}>
                     Inicio
                 </Link>
 
-                <Link to="/user" className={linkClass}>
-                    Usuario
+                <Link to="/users/register" className={linkClass}>
+                    Registrar Usuario
                 </Link>
 
-                {/* Solo mostrar Admin si tiene rol ADMIN */}
                 {isAdmin && (
-                    <Link to="/admin" className={linkClass}>
+                    <Link to="/dashboard" className={linkClass}>
                         Admin
                     </Link>
                 )}
+
 
                 <Link to="/simulation" className={linkClass}>
                     Simulación

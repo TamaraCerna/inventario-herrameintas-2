@@ -1,7 +1,10 @@
 import { useState } from "react";
+import { useKeycloak } from "@react-keycloak/web";
 import { registerTool } from "../Services/ToolService.js";
 
 export default function ToolCreateView() {
+    const { keycloak, initialized } = useKeycloak();
+
     const [form, setForm] = useState({
         nameTool: "",
         categoryTool: "Martillo",
@@ -25,10 +28,20 @@ export default function ToolCreateView() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (!initialized) return;
+        if (!keycloak?.authenticated) {
+            keycloak.login();
+            return;
+        }
+
         try {
             setError("");
             setMsg("");
-            await registerTool(form);
+
+            // ✅ ahora pasamos keycloak primero
+            await registerTool(keycloak, form);
+
             setMsg("✅ Herramienta registrada correctamente");
             setForm({
                 nameTool: "",
@@ -37,6 +50,7 @@ export default function ToolCreateView() {
                 userId: 1,
             });
         } catch (err) {
+            console.error(err);
             setError("Error al registrar herramienta");
         }
     };
@@ -49,7 +63,6 @@ export default function ToolCreateView() {
             {error && <p className="text-red-600 mb-4">{error}</p>}
 
             <form onSubmit={handleSubmit} className="space-y-4">
-
                 {/* Nombre */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -129,4 +142,5 @@ export default function ToolCreateView() {
         </div>
     );
 }
+
 

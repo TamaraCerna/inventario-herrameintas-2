@@ -1,16 +1,15 @@
-import NavBar from "./NavBar"
-import propTypes from "prop-types"
-
+import NavBar from "./NavBar";
+import PropTypes from "prop-types";
 
 export default function ComponentsWithNavBar({ children }) {
     return (
         <>
             <NavBar />
-            {children}
+            <div className="container mx-auto p-6">{children}</div>
         </>
-    )
+    );
 }
 
 ComponentsWithNavBar.propTypes = {
-    children: propTypes.node.isRequired
-}
+    children: PropTypes.node.isRequired,
+};

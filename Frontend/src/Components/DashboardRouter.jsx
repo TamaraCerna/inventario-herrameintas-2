@@ -11,5 +11,9 @@ export default function DashboardRouter() {
 
     const isAdmin = keycloak.hasRealmRole?.("ADMIN");
     return isAdmin ? <AdminDashboard /> : <UserDashboard />;
+
+    console.log("auth:", keycloak.authenticated);
+    console.log("realm roles:", keycloak.tokenParsed?.realm_access?.roles);
+
 }
 
